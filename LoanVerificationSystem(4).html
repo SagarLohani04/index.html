@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VerifyLoan – Online Loan Verification System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+/* ============================================================
+   ROOT VARIABLES
+============================================================ */
+:root {
+  --navy:   #0a1628;
+  --navy2:  #0f2040;
+  --navy3:  #071020;
+  --blue:   #1a4fa0;
+  --blue2:  #2563eb;
+  --gold:   #c8922a;
+  --gold2:  #e8b84b;
+  --mint:   #00c9a7;
+  --white:  #ffffff;
+  --muted:  #8794a8;
+  --border: rgba(255,255,255,0.08);
+  --card:   rgba(255,255,255,0.04);
+  --danger: #e05252;
+  --success:#2ecc7a;
+  --warn:   #f59e0b;
+  --shadow: 0 24px 64px rgba(0,0,0,0.45);
+  --r:      16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.5;}
+
+/* ============================================================
+   AUTH SCREEN
+============================================================ */
+#authScreen{position:fixed;inset:0;z-index:9000;background:var(--navy);display:flex;align-items:stretch;min-height:100vh;transition:opacity .4s;}
+#authScreen.hidden{opacity:0;pointer-events:none;display:none;}
+
+.auth-left{flex:1;min-width:0;background:linear-gradient(145deg,#0d1f3c 0%,#0a1628 50%,#061020 100%);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 48px;}
+.auth-left::before{content:'';position:absolute;top:-140px;left:-140px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(200,146,42,.13) 0%,transparent 70%);pointer-events:none;}
+.auth-left::after{content:'';position:absolute;bottom:-80px;right:-80px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(26,79,160,.18) 0%,transparent 70%);pointer-events:none;}
+.auth-left-content{position:relative;z-index:1;max-width:400px;}
+
+.auth-brand{display:flex;align-items:center;gap:14px;margin-bottom:48px;}
+.auth-brand .logo-icon{width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 8px 28px rgba(200,146,42,.35);}
+.auth-brand span{font-family:'Playfair Display',serif;font-size:1.8rem;letter-spacing:-.02em;}
+
+.auth-left h2{font-family:'Playfair Display',serif;font-size:2.6rem;line-height:1.18;margin-bottom:18px;}
+.auth-left h2 em{font-style:normal;color:var(--gold2);}
+.auth-left>div>p{color:var(--muted);font-size:1rem;line-height:1.75;margin-bottom:44px;}
+
+.auth-features{display:flex;flex-direction:column;gap:14px;}
+.af-item{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 18px;transition:border-color .2s;}
+.af-item:hover{border-color:rgba(200,146,42,.22);}
+.af-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;}
+.af-item strong{display:block;font-size:.9rem;margin-bottom:2px;}
+.af-item span{font-size:.77rem;color:var(--muted);}
+
+.auth-right{width:500px;flex-shrink:0;background:rgba(255,255,255,.025);border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center;padding:56px 48px;overflow-y:auto;}
+.auth-tabs{display:flex;gap:0;margin-bottom:32px;background:rgba(255,255,255,.05);border-radius:12px;padding:4px;}
+.auth-tab{flex:1;padding:10px;border:none;background:none;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:600;border-radius:9px;transition:all .25s;}
+.auth-tab.active{background:var(--white);color:var(--navy);}
+.auth-form-section{display:none;animation:fadeIn .3s ease;}
+.auth-form-section.active{display:block;}
+.auth-title{font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:6px;}
+.auth-sub{color:var(--muted);font-size:.87rem;margin-bottom:26px;line-height:1.65;}
+
+.auth-field{margin-bottom:16px;}
+.auth-field label{display:block;font-size:.77rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;}
+.auth-field input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s,background .2s;}
+.auth-field input:focus{border-color:var(--gold2);background:rgba(255,255,255,.07);}
+.auth-field input::placeholder{color:rgba(255,255,255,.22);}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:44px;}
+.pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;transition:color .2s;padding:4px;}
+.pw-toggle:hover{color:var(--gold2);}
+
+.auth-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.auth-remember{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);cursor:pointer;}
+.auth-remember input{accent-color:var(--gold2);width:15px;height:15px;cursor:pointer;}
+.auth-forgot{font-size:.82rem;color:var(--gold2);background:none;border:none;cursor:pointer;transition:opacity .2s;}
+.auth-forgot:hover{opacity:.75;}
+
+.auth-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'DM Sans',sans-serif;font-weight:700;font-size:1rem;padding:14px;border-radius:12px;border:none;cursor:pointer;transition:all .25s;box-shadow:0 8px 24px rgba(200,146,42,.3);margin-bottom:18px;position:relative;overflow:hidden;}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(200,146,42,.45);}
+.auth-btn:active{transform:translateY(0);}
+.auth-btn.loading::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.15);animation:shimmer 1s infinite;}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.demo-box{background:rgba(200,146,42,.06);border:1px solid rgba(200,146,42,.2);border-radius:12px;padding:16px;margin-bottom:20px;}
+.demo-box .dtitle{font-size:.74rem;font-weight:700;color:var(--gold2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;}
+.demo-cred{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.81rem;}
+.demo-cred:last-of-type{border-bottom:none;}
+.demo-cred .dl{color:var(--muted);}
+.demo-cred .dv{font-family:'DM Mono',monospace;color:var(--white);font-size:.78rem;}
+.dfill{width:100%;margin-top:9px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.25);color:var(--gold2);font-family:'DM Sans',sans-serif;font-size:.79rem;font-weight:600;padding:7px;border-radius:8px;cursor:pointer;transition:all .2s;}
+.dfill:hover{background:rgba(200,146,42,.22);}
+.dfill+.dfill{margin-top:5px;}
+
+.auth-err{background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);border-radius:8px;padding:10px 14px;color:#f87171;font-size:.83rem;margin-bottom:14px;display:none;}
+.auth-err.show{display:block;animation:fadeIn .2s;}
+.auth-ok{background:rgba(46,204,122,.08);border:1px solid rgba(46,204,122,.25);border-radius:8px;padding:10px 14px;color:var(--success);font-size:.83rem;margin-bottom:14px;display:none;}
+.auth-ok.show{display:block;animation:fadeIn .2s;}
+
+.terms-row{display:flex;align-items:flex-start;gap:10px;font-size:.79rem;color:var(--muted);margin-bottom:16px;}
+.terms-row input{accent-color:var(--gold2);width:15px;height:15px;flex-shrink:0;margin-top:2px;cursor:pointer;}
+.terms-row a{color:var(--gold2);text-decoration:none;}
+
+.pw-strength{margin-top:6px;}
+.psbar{display:flex;gap:4px;height:3px;margin-bottom:4px;}
+.psbar span{flex:1;border-radius:3px;background:rgba(255,255,255,.1);transition:background .3s;}
+.pslbl{font-size:.72rem;color:var(--muted);}
+
+/* ============================================================
+   NAV
+============================================================ */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,22,40,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 40px;display:none;align-items:center;justify-content:space-between;height:68px;}
+nav.visible{display:flex;}
+.nav-brand{display:flex;align-items:center;gap:12px;font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--white);text-decoration:none;cursor:pointer;}
+.nav-brand .logo-icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.nav-links{display:flex;gap:6px;align-items:center;}
+.nav-links button{background:none;border:none;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.87rem;font-weight:500;padding:8px 14px;border-radius:8px;transition:all .2s;}
+.nav-links button:hover,.nav-links button.active{color:var(--white);background:var(--card);}
+.nav-cta{background:linear-gradient(135deg,var(--gold),var(--gold2))!important;color:var(--navy)!important;font-weight:700!important;padding:8px 20px!important;box-shadow:0 4px 14px rgba(200,146,42,.3);}
+.nav-cta:hover{opacity:.9;transform:translateY(-1px);}
+.nav-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:100px;padding:5px 14px 5px 7px;}
+.nav-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:var(--navy);}
+.nav-uname{font-size:.84rem;font-weight:600;}
+.nav-urole{font-size:.69rem;color:var(--muted);}
+.nav-logout{background:rgba(224,82,82,.08)!important;border:1px solid rgba(224,82,82,.2)!important;color:var(--danger)!important;font-size:.82rem!important;cursor:pointer;padding:6px 14px!important;border-radius:8px!important;transition:all .2s!important;}
+.nav-logout:hover{background:rgba(224,82,82,.18)!important;}
+
+/* ============================================================
+   MAIN APP / PAGES
+============================================================ */
+#mainApp{display:none;}
+#mainApp.visible{display:block;}
+.page{display:none;animation:fadeIn .35s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============================================================
+   HOME – HERO
+============================================================ */
+.hero{min-height:calc(100vh - 68px);display:flex;align-items:center;justify-content:center;text-align:center;padding:60px 20px;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(26,79,160,.22) 0%,transparent 70%);}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(200,146,42,.12);border:1px solid rgba(200,146,42,.3);color:var(--gold2);font-size:.77rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 18px;border-radius:100px;margin-bottom:28px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,6vw,5rem);line-height:1.1;margin-bottom:22px;max-width:800px;}
+.hero h1 span{color:var(--gold2);}
+.hero p{font-size:1.12rem;color:var(--muted);max-width:540px;margin:0 auto 38px;line-height:1.75;}
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;}
+
+.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-weight:700;font-family:'DM Sans',sans-serif;font-size:.95rem;padding:14px 32px;border-radius:12px;border:none;cursor:pointer;transition:all .25s;box-shadow:0 8px 24px rgba(200,146,42,.3);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(200,146,42,.45);}
+.btn-outline{background:transparent;color:var(--white);font-weight:600;font-family:'DM Sans',sans-serif;font-size:.95rem;padding:14px 32px;border-radius:12px;border:1.5px solid rgba(255,255,255,.2);cursor:pointer;transition:all .25s;}
+.btn-outline:hover{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.05);}
+
+.stats-strip{display:flex;justify-content:center;flex-wrap:wrap;background:rgba(255,255,255,.03);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:32px 40px;}
+.stat-item{text-align:center;padding:0 44px;border-right:1px solid var(--border);}
+.stat-item:last-child{border-right:none;}
+.stat-num{font-family:'Playfair Display',serif;font-size:2.1rem;color:var(--gold2);}
+.stat-lbl{font-size:.81rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+
+.section{padding:80px 40px;max-width:1200px;margin:0 auto;}
+.sec-header{text-align:center;margin-bottom:52px;}
+.sec-tag{display:inline-block;background:rgba(0,201,167,.1);color:var(--mint);font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:4px 14px;border-radius:100px;margin-bottom:14px;}
+.sec-header h2{font-family:'Playfair Display',serif;font-size:2.3rem;margin-bottom:12px;}
+.sec-header p{color:var(--muted);font-size:1.02rem;max-width:510px;margin:0 auto;}
+
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;}
+.feat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:30px;transition:all .3s;position:relative;overflow:hidden;}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);opacity:0;transition:opacity .3s;}
+.feat-card:hover{transform:translateY(-4px);border-color:rgba(200,146,42,.25);}
+.feat-card:hover::before{opacity:1;}
+.feat-icon{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:18px;}
+.feat-card h3{font-size:1.05rem;font-weight:600;margin-bottom:9px;}
+.feat-card p{color:var(--muted);font-size:.88rem;line-height:1.65;}
+
+/* How It Works */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;}
+.how-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;text-align:center;transition:all .25s;}
+.how-card:hover{border-color:rgba(200,146,42,.25);transform:translateY(-3px);}
+.how-num{font-family:'Playfair Display',serif;font-size:2.8rem;color:rgba(200,146,42,.25);margin-bottom:14px;line-height:1;}
+.how-card h3{font-size:1rem;font-weight:600;margin-bottom:8px;}
+.how-card p{color:var(--muted);font-size:.84rem;line-height:1.6;}
+
+/* Loan Types */
+.loan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;}
+.loan-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px 16px;text-align:center;cursor:pointer;transition:all .25s;}
+.loan-card:hover{border-color:var(--gold2);background:rgba(200,146,42,.06);transform:translateY(-3px);}
+.loan-card .lc-icon{font-size:2rem;margin-bottom:10px;}
+.loan-card h4{font-size:.88rem;font-weight:600;margin-bottom:4px;}
+.loan-card p{font-size:.75rem;color:var(--muted);}
+
+/* Testimonials */
+.testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;}
+.testi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:28px;}
+.testi-stars{color:var(--gold2);font-size:1rem;margin-bottom:14px;}
+.testi-card p{color:rgba(255,255,255,.8);font-size:.9rem;line-height:1.7;margin-bottom:18px;font-style:italic;}
+.testi-author{display:flex;align-items:center;gap:12px;}
+.testi-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;}
+.testi-author strong{display:block;font-size:.88rem;}
+.testi-author span{font-size:.76rem;color:var(--muted);}
+
+/* ============================================================
+   APPLY FORM
+============================================================ */
+.apply-wrap{max-width:780px;margin:0 auto;padding:60px 20px;}
+.form-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:24px;padding:48px;backdrop-filter:blur(10px);}
+.form-title{font-family:'Playfair Display',serif;font-size:2rem;margin-bottom:6px;}
+.form-sub{color:var(--muted);margin-bottom:32px;font-size:.94rem;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.fg{display:flex;flex-direction:column;gap:7px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:.8rem;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.94rem;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.fg select option{background:var(--navy2);}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold2);background:rgba(255,255,255,.07);}
+.fg input::placeholder,.fg textarea::placeholder{color:rgba(255,255,255,.22);}
+.fg textarea{resize:vertical;min-height:88px;}
+.form-divider{grid-column:1/-1;border:none;border-top:1px solid var(--border);margin:6px 0;}
+.form-sec-lbl{grid-column:1/-1;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold2);display:flex;align-items:center;gap:10px;}
+.form-sec-lbl::after{content:'';flex:1;height:1px;background:rgba(200,146,42,.2);}
+.submit-btn{grid-column:1/-1;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-weight:700;font-family:'DM Sans',sans-serif;font-size:1rem;padding:15px 32px;border-radius:12px;border:none;cursor:pointer;transition:all .25s;margin-top:6px;box-shadow:0 8px 24px rgba(200,146,42,.3);}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(200,146,42,.45);}
+.form-notice{grid-column:1/-1;background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.2);border-radius:10px;padding:13px 17px;font-size:.84rem;color:var(--mint);display:flex;align-items:flex-start;gap:10px;}
+
+.steps{display:flex;justify-content:center;margin:0 auto 40px;max-width:560px;}
+.step{display:flex;flex-direction:column;align-items:center;flex:1;}
+.step-num{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:.83rem;font-weight:700;transition:all .3s;position:relative;z-index:1;}
+.step.done .step-num{background:var(--gold2);border-color:var(--gold2);color:var(--navy);}
+.step.current .step-num{background:var(--blue2);border-color:#60a5fa;color:var(--white);}
+.step-line{flex:1;height:2px;background:rgba(255,255,255,.1);margin-top:-18px;}
+.step-lbl{font-size:.73rem;color:var(--muted);margin-top:9px;font-weight:500;text-align:center;}
+.step.done .step-lbl,.step.current .step-lbl{color:var(--white);}
+
+/* ============================================================
+   VERIFY STATUS
+============================================================ */
+.verify-wrap{max-width:660px;margin:60px auto;padding:0 20px;}
+.verify-card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:44px;}
+.verify-card h2{font-family:'Playfair Display',serif;font-size:1.9rem;margin-bottom:8px;}
+.verify-card>p{color:var(--muted);margin-bottom:28px;font-size:.94rem;}
+.verify-row{display:flex;gap:12px;}
+.vi{flex:1;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:12px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.94rem;outline:none;transition:border-color .2s;}
+.vi:focus{border-color:var(--gold2);}
+.vi::placeholder{color:rgba(255,255,255,.22);}
+.verify-result{margin-top:26px;padding:22px;border-radius:16px;border:1px solid var(--border);display:none;}
+.verify-result.show{display:block;animation:fadeIn .3s;}
+.verify-result.found{border-color:rgba(46,204,122,.3);background:rgba(46,204,122,.05);}
+.verify-result.nf{border-color:rgba(224,82,82,.3);background:rgba(224,82,82,.05);}
+.vr-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.89rem;}
+.vr-row:last-child{border-bottom:none;}
+.vr-row .vl{color:var(--muted);}
+.vr-row .vv{font-weight:600;}
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+.db-wrap{padding:40px;max-width:1400px;margin:0 auto;}
+.db-topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;flex-wrap:wrap;gap:20px;}
+.db-topbar h2{font-family:'Playfair Display',serif;font-size:2rem;}
+.db-topbar p{color:var(--muted);font-size:.88rem;margin-top:4px;}
+
+/* Role banner */
+.role-banner{padding:14px 20px;border-radius:12px;margin-bottom:28px;display:flex;align-items:center;gap:14px;font-size:.9rem;}
+.role-banner.admin-banner{background:rgba(200,146,42,.08);border:1px solid rgba(200,146,42,.25);}
+.role-banner.user-banner{background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);}
+.role-banner .rb-icon{font-size:1.5rem;}
+.role-banner strong{display:block;margin-bottom:2px;}
+.role-banner span{font-size:.8rem;color:var(--muted);}
+
+/* KPI cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;margin-bottom:32px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;position:relative;overflow:hidden;transition:border-color .25s;}
+.kpi-card:hover{border-color:rgba(200,146,42,.2);}
+.kpi-card::after{content:'';position:absolute;bottom:-24px;right:-24px;width:90px;height:90px;border-radius:50%;background:var(--ka,rgba(200,146,42,.08));}
+.kpi-lbl{font-size:.76rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:2rem;color:var(--white);line-height:1;}
+.kpi-badge{display:inline-flex;align-items:center;gap:4px;font-size:.73rem;font-weight:600;padding:3px 9px;border-radius:6px;margin-top:9px;}
+.kb-up{background:rgba(46,204,122,.12);color:var(--success);}
+.kb-down{background:rgba(224,82,82,.12);color:var(--danger);}
+.kb-warn{background:rgba(245,158,11,.12);color:var(--warn);}
+.kb-blue{background:rgba(37,99,235,.12);color:#60a5ff;}
+
+/* Mini chart bar */
+.mini-chart{display:flex;align-items:flex-end;gap:3px;height:32px;margin-top:8px;}
+.mc-bar{flex:1;border-radius:3px 3px 0 0;min-height:4px;transition:height .6s;}
+
+/* Table controls */
+.tbl-controls{display:flex;align-items:center;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
+.srch{flex:1;min-width:210px;background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;}
+.srch:focus{border-color:var(--gold2);}
+.srch::placeholder{color:rgba(255,255,255,.22);}
+.fsel{background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 16px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:.86rem;outline:none;cursor:pointer;-webkit-appearance:none;}
+.fsel option{background:var(--navy2);}
+
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead{background:rgba(255,255,255,.04);border-bottom:1px solid var(--border);}
+thead th{padding:13px 18px;text-align:left;font-size:.73rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:hover{color:var(--white);}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(255,255,255,.03);}
+tbody td{padding:13px 18px;font-size:.87rem;vertical-align:middle;white-space:nowrap;}
+.td-name{font-weight:600;color:var(--white);}
+.td-id{font-family:'DM Mono',monospace;font-size:.77rem;color:var(--muted);}
+.td-amt{font-family:'DM Mono',monospace;font-weight:600;color:var(--gold2);}
+
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;font-size:.73rem;font-weight:600;}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.b-approved{background:rgba(46,204,122,.12);color:#2ecc7a;}
+.b-pending{background:rgba(200,146,42,.12);color:var(--gold2);}
+.b-rejected{background:rgba(224,82,82,.12);color:var(--danger);}
+.b-processing{background:rgba(37,99,235,.12);color:#60a5ff;}
+
+.act-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--white);font-size:.76rem;font-weight:600;padding:5px 11px;border-radius:7px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;margin-right:3px;}
+.act-btn:hover{background:rgba(200,146,42,.15);border-color:rgba(200,146,42,.4);color:var(--gold2);}
+.act-btn.app-btn:hover{background:rgba(46,204,122,.12);border-color:rgba(46,204,122,.3);color:var(--success);}
+.act-btn.rej-btn:hover{background:rgba(224,82,82,.12);border-color:rgba(224,82,82,.3);color:var(--danger);}
+
+.pagination{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-top:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+.pg-info{font-size:.81rem;color:var(--muted);}
+.pg-btns{display:flex;gap:5px;}
+.pg-btn{width:33px;height:33px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--white);cursor:pointer;font-size:.83rem;display:flex;align-items:center;justify-content:center;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.pg-btn:hover,.pg-btn.active{background:var(--gold2);color:var(--navy);border-color:var(--gold2);}
+
+/* Charts row */
+.charts-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:28px;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:22px;}
+.chart-card h4{font-size:.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;}
+.bar-chart{display:flex;flex-direction:column;gap:8px;}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:.8rem;}
+.bar-lbl{width:80px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.bar-val{width:48px;text-align:right;font-family:'DM Mono',monospace;font-size:.76rem;color:var(--muted);}
+
+.donut-wrap{display:flex;align-items:center;gap:20px;}
+.donut-svg{flex-shrink:0;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;}
+.dl-item{display:flex;align-items:center;gap:8px;font-size:.8rem;}
+.dl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* Recent activity */
+.activity-list{display:flex;flex-direction:column;gap:10px;}
+.act-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.05);}
+.act-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0;}
+.act-text strong{display:block;font-size:.84rem;}
+.act-text span{font-size:.76rem;color:var(--muted);}
+.act-time{margin-left:auto;font-size:.74rem;color:var(--muted);white-space:nowrap;}
+
+/* ============================================================
+   MODAL
+============================================================ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--navy2);border:1px solid var(--border);border-radius:24px;padding:40px;max-width:580px;width:92%;max-height:88vh;overflow-y:auto;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+.modal-overlay.open .modal{transform:scale(1);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+.modal-header h3{font-family:'Playfair Display',serif;font-size:1.5rem;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;padding:4px 10px;border-radius:8px;transition:color .2s;}
+.modal-close:hover{color:var(--white);}
+.m-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);}
+.m-row:last-child{border-bottom:none;}
+.m-row .ml{color:var(--muted);font-size:.84rem;flex-shrink:0;margin-right:16px;}
+.m-row .mv{font-weight:600;font-size:.93rem;text-align:right;}
+
+/* ============================================================
+   TOAST
+============================================================ */
+.toast{position:fixed;bottom:30px;right:30px;background:var(--navy2);border:1px solid var(--border);border-radius:14px;padding:15px 20px;z-index:9999;display:flex;align-items:center;gap:13px;box-shadow:var(--shadow);transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);max-width:370px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast-icon{font-size:1.45rem;flex-shrink:0;}
+.toast-text strong{display:block;font-size:.93rem;margin-bottom:2px;}
+.toast-text span{font-size:.8rem;color:var(--muted);}
+.toast.success{border-color:rgba(46,204,122,.3);}
+.toast.error{border-color:rgba(224,82,82,.3);}
+.toast.warn{border-color:rgba(245,158,11,.3);}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer{background:rgba(0,0,0,.3);border-top:1px solid var(--border);padding:40px;text-align:center;}
+footer .fb{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:10px;}
+footer .flinks{display:flex;gap:22px;justify-content:center;margin:18px 0;flex-wrap:wrap;}
+footer .flinks a{color:var(--muted);text-decoration:none;font-size:.84rem;transition:color .2s;}
+footer .flinks a:hover{color:var(--gold2);}
+footer p{color:var(--muted);font-size:.83rem;line-height:1.75;}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:900px){.auth-left{display:none;}.auth-right{width:100%;border-left:none;}.charts-row{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  nav{padding:0 16px;}
+  .nav-links button:not(.nav-logout):not(.nav-cta){display:none;}
+  .hero h1{font-size:2rem;}
+  .form-grid{grid-template-columns:1fr;}
+  .fg.full,.submit-btn,.form-divider,.form-sec-lbl,.form-notice{grid-column:1;}
+  .stats-strip{flex-direction:column;gap:20px;}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border);padding-bottom:20px;}
+  .stat-item:last-child{border-bottom:none;}
+  .db-wrap{padding:18px;}
+  .form-card,.verify-card{padding:26px 18px;}
+  .verify-row{flex-direction:column;}
+  .section{padding:60px 20px;}
+  .auth-right{padding:40px 26px;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:440px){.kpi-grid{grid-template-columns:1fr;}}
+
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2);}
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     AUTH SCREEN
+================================================================ -->
+<div id="authScreen">
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="auth-brand">
+        <div class="logo-icon">🏦</div>
+        <span>VerifyLoan</span>
+      </div>
+      <h2>Borrow Smarter,<br/><em>Live Better.</em></h2>
+      <p>India's most trusted online loan verification platform. Apply, track, and manage your loans securely — no branch visits required.</p>
+      <div class="auth-features">
+        <div class="af-item"><div class="af-icon" style="background:rgba(200,146,42,.12);">⚡</div><div><strong>Instant Pre-Approval</strong><span>AI decisions in under 60 seconds</span></div></div>
+        <div class="af-item"><div class="af-icon" style="background:rgba(0,201,167,.12);">🔐</div><div><strong>Bank-Grade Security</strong><span>AES-256 encryption, ISO 27001 certified</span></div></div>
+        <div class="af-item"><div class="af-icon" style="background:rgba(37,99,235,.12);">📊</div><div><strong>Live Dashboard</strong><span>Track applications & analytics in real-time</span></div></div>
+        <div class="af-item"><div class="af-icon" style="background:rgba(200,146,42,.12);">🏦</div><div><strong>50+ Partner Banks</strong><span>Best rates compared automatically</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form-section active" id="form-login">
+      <div class="auth-title">Welcome Back</div>
+      <div class="auth-sub">Sign in to your VerifyLoan account to manage applications and access your dashboard.</div>
+      <div class="demo-box">
+        <div class="dtitle">🔑 Demo Credentials</div>
+        <div class="demo-cred"><span class="dl">User Account</span><span class="dv">user@verifyloan.in / User@1234</span></div>
+        <div class="demo-cred"><span class="dl">Admin Account</span><span class="dv">admin@verifyloan.in / Admin@9999</span></div>
+        <button class="dfill" onclick="fillDemo('user')">↳ Fill User Credentials</button>
+        <button class="dfill" onclick="fillDemo('admin')">↳ Fill Admin Credentials</button>
+      </div>
+      <div class="auth-err" id="loginErr"></div>
+      <div class="auth-field">
+        <label>Email Address</label>
+        <input type="email" id="li_email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="li_pwd" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <button class="pw-toggle" onclick="togglePw('li_pwd',this)">👁</button>
+        </div>
+      </div>
+      <div class="auth-row">
+        <label class="auth-remember"><input type="checkbox" id="remMe"/> Remember me</label>
+        <button class="auth-forgot" onclick="forgotPwd()">Forgot password?</button>
+      </div>
+      <button class="auth-btn" id="loginBtn" onclick="doLogin()">Sign In to Dashboard →</button>
+      <div style="text-align:center;font-size:.82rem;color:var(--muted);">Don't have an account? <button style="background:none;border:none;color:var(--gold2);cursor:pointer;font-size:.82rem;font-weight:600;" onclick="switchTab('register')">Register Free</button></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-form-section" id="form-register">
+      <div class="auth-title">Create Account</div>
+      <div class="auth-sub">Join thousands of borrowers who trust VerifyLoan for fast, transparent loan processing.</div>
+      <div class="auth-err" id="regErr"></div>
+      <div class="auth-ok" id="regOk"></div>
+      <div class="auth-field"><label>Full Name</label><input type="text" id="rg_name" placeholder="e.g. Rahul Sharma"/></div>
+      <div class="auth-field"><label>Email Address</label><input type="email" id="rg_email" placeholder="your@email.com"/></div>
+      <div class="auth-field"><label>Mobile Number</label><input type="tel" id="rg_mobile" placeholder="10-digit mobile" maxlength="10"/></div>
+      <div class="auth-field">
+        <label>Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="rg_pwd" placeholder="Create a strong password" oninput="checkPwStrength(this.value)"/>
+          <button class="pw-toggle" onclick="togglePw('rg_pwd',this)">👁</button>
+        </div>
+        <div class="pw-strength">
+          <div class="psbar"><span id="ps1"></span><span id="ps2"></span><span id="ps3"></span><span id="ps4"></span></div>
+          <div class="pslbl" id="psLbl">Enter a password</div>
+        </div>
+      </div>
+      <div class="auth-field">
+        <label>Confirm Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="rg_pwd2" placeholder="Re-enter password"/>
+          <button class="pw-toggle" onclick="togglePw('rg_pwd2',this)">👁</button>
+        </div>
+      </div>
+      <div class="terms-row"><input type="checkbox" id="termsChk"/><span>I agree to VerifyLoan's <a href="#">Terms of Service</a>, <a href="#">Privacy Policy</a> and authorise credit check.</span></div>
+      <button class="auth-btn" onclick="doRegister()">Create My Account →</button>
+      <div style="text-align:center;font-size:.82rem;color:var(--muted);">Already have an account? <button style="background:none;border:none;color:var(--gold2);cursor:pointer;font-size:.82rem;font-weight:600;" onclick="switchTab('login')">Sign In</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MAIN APP
+================================================================ -->
+<div id="mainApp">
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-brand" onclick="showPage('home')">
+    <div class="logo-icon">🏦</div>VerifyLoan
+  </div>
+  <div class="nav-links">
+    <button onclick="showPage('home')" id="nav-home" class="active">Home</button>
+    <button onclick="showPage('apply')" id="nav-apply">Apply</button>
+    <button onclick="showPage('verify')" id="nav-verify">Verify Status</button>
+    <button onclick="showPage('dashboard')" id="nav-dashboard">Dashboard</button>
+    <button class="nav-cta" onclick="showPage('apply')">Apply Now →</button>
+    <div class="nav-user">
+      <div class="nav-avatar" id="navAv">U</div>
+      <div>
+        <div class="nav-uname" id="navName">User</div>
+        <div class="nav-urole" id="navRole">Member</div>
+      </div>
+    </div>
+    <button class="nav-logout" onclick="doLogout()">⏻ Logout</button>
+  </div>
+</nav>
+
+<!-- ======== HOME PAGE ======== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div>
+      <div class="hero-badge">🔒 RBI Registered &nbsp;•&nbsp; ISO 27001 Certified</div>
+      <h1>Smart <span>Loan Verification</span><br/>Built for Speed & Trust</h1>
+      <p>Apply for personal, home, or business loans online. Get real-time verification, instant status updates, and transparent approvals — all in one secure platform.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="showPage('apply')">Apply for a Loan</button>
+        <button class="btn-outline" onclick="showPage('dashboard')">View Dashboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-strip">
+    <div class="stat-item"><div class="stat-num" id="ctr-apps">0</div><div class="stat-lbl">Loans Processed</div></div>
+    <div class="stat-item"><div class="stat-num">₹4.8Cr+</div><div class="stat-lbl">Total Disbursed</div></div>
+    <div class="stat-item"><div class="stat-num">98.6%</div><div class="stat-lbl">Approval Rate</div></div>
+    <div class="stat-item"><div class="stat-num">2 Hrs</div><div class="stat-lbl">Avg. Verification</div></div>
+    <div class="stat-item"><div class="stat-num">50+</div><div class="stat-lbl">Partner Banks</div></div>
+  </div>
+
+  <!-- Features -->
+  <div class="section">
+    <div class="sec-header">
+      <div class="sec-tag">Why VerifyLoan</div>
+      <h2>Everything You Need to Borrow Smarter</h2>
+      <p>AI-powered credit scoring with bank-grade security for fast, fair loan decisions.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(200,146,42,.1);">⚡</div><h3>Instant Pre-Approval</h3><p>AI-driven credit engine analyses your profile in under 60 seconds before you submit all documents.</p></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(0,201,167,.1);">🔐</div><h3>256-bit Encrypted</h3><p>All personal and financial data is protected with bank-grade AES-256 encryption in ISO-certified data centres.</p></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(37,99,235,.1);">📋</div><h3>Digital KYC</h3><p>Upload Aadhaar, PAN, and income documents directly. System auto-verifies with government databases in real-time.</p></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(200,146,42,.1);">📊</div><h3>Live Dashboard</h3><p>Track your application at every stage — from submission to disbursement — with a real-time analytics dashboard.</p></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(0,201,167,.1);">🏦</div><h3>Multi-Bank Comparison</h3><p>We compare rates across 50+ lenders to ensure you always get the lowest possible interest rate.</p></div>
+      <div class="feat-card"><div class="feat-icon" style="background:rgba(37,99,235,.1);">📱</div><h3>Zero Paperwork</h3><p>100% digital process. No branch visits required. Apply, verify, and receive disbursement entirely online.</p></div>
+    </div>
+  </div>
+
+  <!-- Loan Types -->
+  <div class="section" style="padding-top:0;">
+    <div class="sec-header">
+      <div class="sec-tag">Loan Products</div>
+      <h2>Find the Right Loan for You</h2>
+      <p>From personal needs to large business requirements — we have it covered.</p>
+    </div>
+    <div class="loan-grid">
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">🏠</div><h4>Home Loan</h4><p>From 8.4% p.a.</p></div>
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">💼</div><h4>Business Loan</h4><p>From 10.5% p.a.</p></div>
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">👤</div><h4>Personal Loan</h4><p>From 11.2% p.a.</p></div>
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">🚗</div><h4>Vehicle Loan</h4><p>From 8.9% p.a.</p></div>
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">🎓</div><h4>Education Loan</h4><p>From 9.0% p.a.</p></div>
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">🥇</div><h4>Gold Loan</h4><p>From 7.5% p.a.</p></div>
+      <div class="loan-card" onclick="showPage('apply')"><div class="lc-icon">🌾</div><h4>Micro Finance</h4><p>From 12.0% p.a.</p></div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="section" style="padding-top:0;">
+    <div class="sec-header">
+      <div class="sec-tag">Process</div>
+      <h2>Get Your Loan in 4 Simple Steps</h2>
+    </div>
+    <div class="how-grid">
+      <div class="how-card"><div class="how-num">01</div><h3>Apply Online</h3><p>Fill the digital application form with your personal and financial details.</p></div>
+      <div class="how-card"><div class="how-num">02</div><h3>Upload Documents</h3><p>Submit KYC documents — Aadhaar, PAN, income proof — digitally.</p></div>
+      <div class="how-card"><div class="how-num">03</div><h3>Verification</h3><p>AI engine cross-checks data with government databases and credit bureaus.</p></div>
+      <div class="how-card"><div class="how-num">04</div><h3>Disbursement</h3><p>Approved amount is credited directly to your bank account within 24 hours.</p></div>
+    </div>
+  </div>
+
+  <!-- Testimonials -->
+  <div class="section" style="padding-top:0;">
+    <div class="sec-header">
+      <div class="sec-tag">Testimonials</div>
+      <h2>Trusted by Thousands</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Got my home loan approved in just 2 hours! The process was completely digital and the team was very responsive."</p><div class="testi-author"><div class="testi-av">RS</div><div><strong>Rajesh Sharma</strong><span>Home Loan — ₹35L Approved</span></div></div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★★</div><p>"Best platform for business loans. The dashboard makes it so easy to track the application status in real-time."</p><div class="testi-author"><div class="testi-av">AP</div><div><strong>Anita Patil</strong><span>Business Loan — ₹20L Approved</span></div></div></div>
+      <div class="testi-card"><div class="testi-stars">★★★★☆</div><p>"Very transparent process. I could see exactly what stage my application was in and got notified at every step."</p><div class="testi-author"><div class="testi-av">VD</div><div><strong>Vikram Desai</strong><span>Vehicle Loan — ₹7L Approved</span></div></div></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="fb">🏦 VerifyLoan</div>
+    <div class="flinks">
+      <a href="#">Privacy Policy</a><a href="#">Terms of Service</a>
+      <a href="#">NBFC Guidelines</a><a href="#">Grievance</a><a href="#">Contact Us</a>
+    </div>
+    <p>© 2025 VerifyLoan Financial Services Pvt. Ltd. | CIN: U65920MH2025PTC123456<br/>
+    Registered with RBI as NBFC. Loans subject to credit appraisal. | Nashik, Maharashtra – 422001</p>
+  </footer>
+</div>
+
+<!-- ======== APPLY PAGE ======== -->
+<div class="page" id="page-apply">
+  <div class="apply-wrap">
+    <div class="steps">
+      <div class="step done"><div class="step-num">✓</div><div class="step-lbl">Personal Info</div></div>
+      <div class="step-line"></div>
+      <div class="step current"><div class="step-num">2</div><div class="step-lbl">Loan Details</div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-num">3</div><div class="step-lbl">Documents</div></div>
+      <div class="step-line"></div>
+      <div class="step"><div class="step-num">4</div><div class="step-lbl">Review</div></div>
+    </div>
+    <div class="form-card">
+      <div class="form-title">Loan Application Form</div>
+      <div class="form-sub">Fill in accurate details to ensure faster verification and approval.</div>
+      <div class="form-notice" style="margin-bottom:28px;"><span>ℹ️</span><span>Your data is secured with 256-bit encryption. We never share your information without consent.</span></div>
+      <div class="form-grid">
+        <div class="form-sec-lbl">Personal Information</div>
+        <div class="fg"><label>First Name *</label><input type="text" id="f_fname" placeholder="e.g. Rahul"/></div>
+        <div class="fg"><label>Last Name *</label><input type="text" id="f_lname" placeholder="e.g. Sharma"/></div>
+        <div class="fg"><label>Date of Birth *</label><input type="date" id="f_dob"/></div>
+        <div class="fg"><label>Gender *</label><select id="f_gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+        <div class="fg"><label>Mobile Number *</label><input type="tel" id="f_mobile" placeholder="10-digit number" maxlength="10"/></div>
+        <div class="fg"><label>Email Address *</label><input type="email" id="f_email" placeholder="rahul@example.com"/></div>
+        <div class="fg full"><label>Residential Address *</label><textarea id="f_address" placeholder="Full address with city, state, PIN..."></textarea></div>
+        <hr class="form-divider"/>
+        <div class="form-sec-lbl">Financial & Employment</div>
+        <div class="fg"><label>Employment Type *</label><select id="f_emptype"><option value="">Select</option><option>Salaried</option><option>Self-Employed</option><option>Business Owner</option><option>Retired</option><option>Student</option></select></div>
+        <div class="fg"><label>Monthly Income (₹) *</label><input type="number" id="f_income" placeholder="e.g. 50000"/></div>
+        <div class="fg full"><label>Employer / Business Name</label><input type="text" id="f_employer" placeholder="Company or business name"/></div>
+        <div class="fg"><label>PAN Number *</label><input type="text" id="f_pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase"/></div>
+        <div class="fg"><label>Aadhaar Number *</label><input type="text" id="f_aadhaar" placeholder="12-digit number" maxlength="12"/></div>
+        <div class="fg"><label>CIBIL / Credit Score</label><input type="number" id="f_cibil" placeholder="e.g. 750" min="300" max="900"/></div>
+        <div class="fg"><label>Existing EMIs (₹/month)</label><input type="number" id="f_emi" placeholder="0"/></div>
+        <hr class="form-divider"/>
+        <div class="form-sec-lbl">Loan Requirements</div>
+        <div class="fg"><label>Loan Type *</label><select id="f_loantype"><option value="">Select</option><option>Personal Loan</option><option>Home Loan</option><option>Vehicle Loan</option><option>Business Loan</option><option>Education Loan</option><option>Gold Loan</option><option>Micro Finance</option></select></div>
+        <div class="fg"><label>Loan Amount (₹) *</label><input type="number" id="f_amount" placeholder="e.g. 500000"/></div>
+        <div class="fg"><label>Preferred Tenure *</label><select id="f_tenure"><option value="">Select</option><option>6 Months</option><option>12 Months</option><option>24 Months</option><option>36 Months</option><option>48 Months</option><option>60 Months</option><option>84 Months</option><option>120 Months</option><option>180 Months</option><option>240 Months</option></select></div>
+        <div class="fg"><label>Purpose of Loan</label><input type="text" id="f_purpose" placeholder="e.g. Home renovation"/></div>
+        <div class="fg full"><label>Additional Remarks</label><textarea id="f_remarks" placeholder="Any additional information..."></textarea></div>
+        <div class="form-notice"><span>📄</span><span>By submitting you agree to our Terms and authorise VerifyLoan to run a soft credit check. This does not affect your credit score.</span></div>
+        <button class="submit-btn" onclick="submitApp()">Submit Application →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== VERIFY PAGE ======== -->
+<div class="page" id="page-verify">
+  <div class="verify-wrap">
+    <div class="verify-card">
+      <h2>Verify Loan Status</h2>
+      <p>Enter your Application ID or registered mobile number to check the current status of your loan application.</p>
+      <label style="font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:7px;">Application ID or Mobile Number</label>
+      <div class="verify-row">
+        <input class="vi" type="text" id="verifyInput" placeholder="e.g. VL-2025-0001 or 9876543210" onkeydown="if(event.key==='Enter')checkStatus()"/>
+        <button class="btn-primary" onclick="checkStatus()">Check Status</button>
+      </div>
+      <div class="verify-result" id="verifyResult"></div>
+    </div>
+
+    <div style="margin-top:40px;">
+      <div class="sec-header" style="text-align:left;margin-bottom:22px;">
+        <div class="sec-tag" style="margin-bottom:10px;">Process</div>
+        <h2 style="font-size:1.6rem;">Verification Steps</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;gap:16px;align-items:flex-start;"><div style="width:38px;height:38px;border-radius:50%;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--gold2);font-size:.9rem;">1</div><div><strong>Document Submission</strong><p style="color:var(--muted);font-size:.87rem;margin-top:3px;">Upload KYC documents — Aadhaar, PAN, income proof.</p></div></div>
+        <div style="display:flex;gap:16px;align-items:flex-start;"><div style="width:38px;height:38px;border-radius:50%;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--gold2);font-size:.9rem;">2</div><div><strong>Automated Verification</strong><p style="color:var(--muted);font-size:.87rem;margin-top:3px;">AI engine cross-checks documents with government databases.</p></div></div>
+        <div style="display:flex;gap:16px;align-items:flex-start;"><div style="width:38px;height:38px;border-radius:50%;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--gold2);font-size:.9rem;">3</div><div><strong>Credit Assessment</strong><p style="color:var(--muted);font-size:.87rem;margin-top:3px;">CIBIL score checked; debt-to-income ratio evaluated.</p></div></div>
+        <div style="display:flex;gap:16px;align-items:flex-start;"><div style="width:38px;height:38px;border-radius:50%;background:rgba(200,146,42,.15);border:1px solid rgba(200,146,42,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;color:var(--gold2);font-size:.9rem;">4</div><div><strong>Decision & Disbursement</strong><p style="color:var(--muted);font-size:.87rem;margin-top:3px;">Approved amount credited directly to your bank account.</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== DASHBOARD PAGE ======== -->
+<div class="page" id="page-dashboard">
+  <div class="db-wrap">
+    <div class="db-topbar">
+      <div>
+        <h2>Loan Management Dashboard</h2>
+        <p id="db-sub">Real-time overview of all loan applications</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn-outline" onclick="exportCSV()" style="font-size:.87rem;padding:10px 18px;">⬇ Export CSV</button>
+        <button class="btn-primary" onclick="showPage('apply')" style="font-size:.87rem;padding:10px 18px;">+ New Application</button>
+      </div>
+    </div>
+
+    <!-- Role-specific banner -->
+    <div class="role-banner admin-banner" id="adminBanner" style="display:none;">
+      <div class="rb-icon">🛡</div>
+      <div><strong>Administrator View — Full Access</strong><span>You can view all applications, approve/reject, export data, and manage the system.</span></div>
+    </div>
+    <div class="role-banner user-banner" id="userBanner" style="display:none;">
+      <div class="rb-icon">👤</div>
+      <div><strong id="userBannerName">Member View</strong><span>You can see all applications, track statuses, and monitor loan analytics below.</span></div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--ka:rgba(200,146,42,.1);">
+        <div class="kpi-lbl">Total Applications</div>
+        <div class="kpi-val" id="kpi-total">—</div>
+        <div class="mini-chart" id="mc-total"></div>
+        <div class="kpi-badge kb-up">↑ Live Count</div>
+      </div>
+      <div class="kpi-card" style="--ka:rgba(46,204,122,.08);">
+        <div class="kpi-lbl">Approved</div>
+        <div class="kpi-val" id="kpi-approved">—</div>
+        <div class="kpi-badge kb-up" id="kpi-apprate">—</div>
+      </div>
+      <div class="kpi-card" style="--ka:rgba(245,158,11,.08);">
+        <div class="kpi-lbl">Pending Review</div>
+        <div class="kpi-val" id="kpi-pending">—</div>
+        <div class="kpi-badge kb-warn">Awaiting</div>
+      </div>
+      <div class="kpi-card" style="--ka:rgba(37,99,235,.08);">
+        <div class="kpi-lbl">Processing</div>
+        <div class="kpi-val" id="kpi-processing">—</div>
+        <div class="kpi-badge kb-blue">In Progress</div>
+      </div>
+      <div class="kpi-card" style="--ka:rgba(224,82,82,.06);">
+        <div class="kpi-lbl">Rejected</div>
+        <div class="kpi-val" id="kpi-rejected">—</div>
+        <div class="kpi-badge kb-down">Flagged</div>
+      </div>
+      <div class="kpi-card" style="--ka:rgba(200,146,42,.1);">
+        <div class="kpi-lbl">Total Portfolio (₹)</div>
+        <div class="kpi-val" id="kpi-amount">—</div>
+        <div class="kpi-badge kb-up">Crores</div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <h4>Loan Type Distribution</h4>
+        <div class="bar-chart" id="loanTypeChart"></div>
+      </div>
+      <div class="chart-card">
+        <h4>Status Breakdown</h4>
+        <div class="donut-wrap">
+          <svg class="donut-svg" width="100" height="100" viewBox="0 0 100 100" id="donutSvg">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="14"/>
+          </svg>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h4>Recent Activity</h4>
+        <div class="activity-list" id="activityList"></div>
+      </div>
+    </div>
+
+    <!-- Table Controls -->
+    <div class="tbl-controls">
+      <input class="srch" id="srchInput" type="text" placeholder="🔍  Search name, ID, mobile, email..." oninput="renderTable()"/>
+      <select class="fsel" id="stFilter" onchange="renderTable()">
+        <option value="">All Status</option>
+        <option>Approved</option><option>Pending</option><option>Rejected</option><option>Processing</option>
+      </select>
+      <select class="fsel" id="tyFilter" onchange="renderTable()">
+        <option value="">All Types</option>
+        <option>Personal Loan</option><option>Home Loan</option><option>Vehicle Loan</option><option>Business Loan</option><option>Education Loan</option><option>Gold Loan</option><option>Micro Finance</option>
+      </select>
+    </div>
+
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>App ID</th><th>Applicant</th><th>Mobile</th>
+            <th>Loan Type</th><th>Amount (₹)</th><th>CIBIL</th>
+            <th>Tenure</th><th>Applied On</th><th>Status</th><th id="actColHead">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="pagination">
+        <div class="pg-info" id="pgInfo">Showing — records</div>
+        <div class="pg-btns" id="pgBtns"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /mainApp -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Application Details</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon">✅</span>
+  <div class="toast-text"><strong id="toastTitle"></strong><span id="toastMsg"></span></div>
+</div>
+
+<!-- ================================================================
+     JAVASCRIPT
+================================================================ -->
+<script>
+/* ─────────────────────────────────────────────
+   USERS DATABASE
+───────────────────────────────────────────── */
+const USERS = [
+  {name:"Admin User",    email:"admin@verifyloan.in", pwd:"Admin@9999", role:"admin",  mobile:"9999999999"},
+  {name:"Raj Mehta",     email:"user@verifyloan.in",  pwd:"User@1234",  role:"user",   mobile:"9876543210"},
+  {name:"Priya Sharma",  email:"priya@example.com",   pwd:"Priya@5678", role:"user",   mobile:"9823456789"},
+  {name:"Amit Patel",    email:"amit@example.com",    pwd:"Amit@3456",  role:"user",   mobile:"9812345678"}
+];
+let currentUser = null;
+
+/* ─────────────────────────────────────────────
+   LOAN DATABASE — 50 Records
+───────────────────────────────────────────── */
+const DB = [
+  {id:"VL-2025-0001",name:"Rajesh Kumar Sharma",mobile:"9876543210",email:"rajesh.sharma@gmail.com",gender:"Male",dob:"1985-03-15",address:"42 MG Road, Nashik MH 422001",emptype:"Salaried",income:65000,employer:"TCS Ltd",pan:"ABCDS1234F",aadhaar:"234567890123",cibil:780,emi:8000,loantype:"Personal Loan",amount:300000,tenure:"36 Months",purpose:"Home Renovation",status:"Approved",date:"2025-01-05"},
+  {id:"VL-2025-0002",name:"Priya Mehta",mobile:"9823456789",email:"priya.mehta@yahoo.com",gender:"Female",dob:"1990-07-22",address:"18 Shivaji Nagar, Pune MH 411005",emptype:"Salaried",income:48000,employer:"Infosys",pan:"BCDEF2345G",aadhaar:"345678901234",cibil:720,emi:5000,loantype:"Education Loan",amount:500000,tenure:"60 Months",purpose:"MBA Abroad",status:"Approved",date:"2025-01-08"},
+  {id:"VL-2025-0003",name:"Amit Singh Rathore",mobile:"9812345678",email:"amit.rathore@outlook.com",gender:"Male",dob:"1978-11-03",address:"Plot 7 Sector 12, Navi Mumbai MH 400614",emptype:"Business Owner",income:120000,employer:"Rathore Industries",pan:"CDEFG3456H",aadhaar:"456789012345",cibil:810,emi:22000,loantype:"Business Loan",amount:2000000,tenure:"84 Months",purpose:"Business Expansion",status:"Approved",date:"2025-01-10"},
+  {id:"VL-2025-0004",name:"Sunita Devi Patel",mobile:"9867890123",email:"sunita.patel@gmail.com",gender:"Female",dob:"1992-04-18",address:"B-12 Anand Vihar, Aurangabad MH 431001",emptype:"Self-Employed",income:35000,employer:"Own Boutique",pan:"DEFGH4567I",aadhaar:"567890123456",cibil:680,emi:3000,loantype:"Gold Loan",amount:150000,tenure:"12 Months",purpose:"Medical Emergency",status:"Processing",date:"2025-01-12"},
+  {id:"VL-2025-0005",name:"Vikram Desai",mobile:"9756781234",email:"vikram.desai@gmail.com",gender:"Male",dob:"1983-09-30",address:"22 Lake View, Nagpur MH 440001",emptype:"Salaried",income:72000,employer:"HDFC Bank",pan:"EFGHI5678J",aadhaar:"678901234567",cibil:755,emi:12000,loantype:"Vehicle Loan",amount:700000,tenure:"60 Months",purpose:"New Car",status:"Approved",date:"2025-01-14"},
+  {id:"VL-2025-0006",name:"Kavita Joshi",mobile:"9834561234",email:"kavita.joshi@hotmail.com",gender:"Female",dob:"1987-02-14",address:"56 Prabhat Road, Nashik MH 422005",emptype:"Salaried",income:42000,employer:"State Bank of India",pan:"FGHIJ6789K",aadhaar:"789012345678",cibil:695,emi:6000,loantype:"Personal Loan",amount:200000,tenure:"24 Months",purpose:"Wedding",status:"Pending",date:"2025-01-16"},
+  {id:"VL-2025-0007",name:"Ravi Shankar Gupta",mobile:"9845671234",email:"ravi.gupta@gmail.com",gender:"Male",dob:"1975-06-25",address:"15 Ram Nagar, Thane MH 400601",emptype:"Business Owner",income:95000,employer:"Gupta Textiles",pan:"GHIJK7890L",aadhaar:"890123456789",cibil:740,emi:18000,loantype:"Home Loan",amount:4500000,tenure:"240 Months",purpose:"New House",status:"Approved",date:"2025-01-18"},
+  {id:"VL-2025-0008",name:"Neha Kumari Singh",mobile:"9778901234",email:"neha.singh@gmail.com",gender:"Female",dob:"1995-12-08",address:"7A Dharampeth, Wardha MH 442001",emptype:"Salaried",income:30000,employer:"Wipro Technologies",pan:"HIJKL8901M",aadhaar:"901234567890",cibil:660,emi:0,loantype:"Personal Loan",amount:100000,tenure:"18 Months",purpose:"Travel",status:"Rejected",date:"2025-01-20"},
+  {id:"VL-2025-0009",name:"Suresh Babu Nair",mobile:"9890123456",email:"suresh.nair@gmail.com",gender:"Male",dob:"1980-08-17",address:"Building 4 MIDC, Nashik MH 422010",emptype:"Salaried",income:88000,employer:"Mahindra & Mahindra",pan:"IJKLM9012N",aadhaar:"012345678901",cibil:800,emi:15000,loantype:"Home Loan",amount:3500000,tenure:"180 Months",purpose:"Home Purchase",status:"Approved",date:"2025-01-22"},
+  {id:"VL-2025-0010",name:"Meera Pillai",mobile:"9901234567",email:"meera.pillai@yahoo.com",gender:"Female",dob:"1993-05-11",address:"45 Ganesh Nagar, Kolhapur MH 416001",emptype:"Self-Employed",income:55000,employer:"MP Enterprises",pan:"JKLMN0123O",aadhaar:"123456789012",cibil:710,emi:9000,loantype:"Business Loan",amount:800000,tenure:"48 Months",purpose:"Shop Setup",status:"Approved",date:"2025-01-24"},
+  {id:"VL-2025-0011",name:"Arun Pawar",mobile:"9712345678",email:"arun.pawar@gmail.com",gender:"Male",dob:"1988-01-19",address:"Plot 3 Cidco Colony, Nashik MH 422101",emptype:"Salaried",income:54000,employer:"L&T Finance",pan:"KLMNO1234P",aadhaar:"234508901234",cibil:730,emi:7000,loantype:"Vehicle Loan",amount:550000,tenure:"48 Months",purpose:"Commercial Vehicle",status:"Processing",date:"2025-01-26"},
+  {id:"VL-2025-0012",name:"Pooja Rani Verma",mobile:"9623456789",email:"pooja.verma@outlook.com",gender:"Female",dob:"1997-09-03",address:"12 Sadar Bazar, Amravati MH 444601",emptype:"Salaried",income:28000,employer:"Yes Bank",pan:"LMNOP2345Q",aadhaar:"345679012345",cibil:650,emi:0,loantype:"Education Loan",amount:350000,tenure:"60 Months",purpose:"NEET Coaching",status:"Pending",date:"2025-01-28"},
+  {id:"VL-2025-0013",name:"Dinesh Choudhary",mobile:"9534561234",email:"dinesh.choudh@gmail.com",gender:"Male",dob:"1970-03-28",address:"Village Ozar, Nashik MH 422206",emptype:"Self-Employed",income:40000,employer:"Farm Owner",pan:"MNOPQ3456R",aadhaar:"456780123456",cibil:670,emi:4000,loantype:"Micro Finance",amount:80000,tenure:"12 Months",purpose:"Seeds & Fertilizer",status:"Approved",date:"2025-01-30"},
+  {id:"VL-2025-0014",name:"Shalini Iyer",mobile:"9445671234",email:"shalini.iyer@gmail.com",gender:"Female",dob:"1986-07-07",address:"33 Brahmin Ali, Solapur MH 413003",emptype:"Salaried",income:61000,employer:"Axis Bank",pan:"NOPQR4567S",aadhaar:"567891234567",cibil:770,emi:10000,loantype:"Home Loan",amount:2800000,tenure:"180 Months",purpose:"Home Extension",status:"Approved",date:"2025-02-01"},
+  {id:"VL-2025-0015",name:"Prakash Tiwari",mobile:"9356781234",email:"prakash.tiwari@yahoo.com",gender:"Male",dob:"1982-11-22",address:"77 Civil Lines, Dhule MH 424001",emptype:"Business Owner",income:150000,employer:"Tiwari Constructions",pan:"OPQRS5678T",aadhaar:"678902345678",cibil:820,emi:30000,loantype:"Business Loan",amount:5000000,tenure:"84 Months",purpose:"Construction Project",status:"Approved",date:"2025-02-03"},
+  {id:"VL-2025-0016",name:"Anjali Kulkarni",mobile:"9267890123",email:"anjali.kulkarni@gmail.com",gender:"Female",dob:"1994-04-15",address:"8 Sahakar Nagar, Nashik MH 422003",emptype:"Salaried",income:46000,employer:"Kotak Mahindra",pan:"PQRST6789U",aadhaar:"789013456789",cibil:705,emi:5500,loantype:"Personal Loan",amount:250000,tenure:"36 Months",purpose:"Home Appliances",status:"Approved",date:"2025-02-05"},
+  {id:"VL-2025-0017",name:"Rohit Kale",mobile:"9178901234",email:"rohit.kale@hotmail.com",gender:"Male",dob:"1991-08-09",address:"21 Tapovan Rd, Trimbak MH 422212",emptype:"Salaried",income:38000,employer:"BPCL",pan:"QRSTU7890V",aadhaar:"890124567890",cibil:685,emi:3500,loantype:"Vehicle Loan",amount:420000,tenure:"36 Months",purpose:"Bike Loan",status:"Rejected",date:"2025-02-07"},
+  {id:"VL-2025-0018",name:"Smita Bhosale",mobile:"9089012345",email:"smita.bhosale@gmail.com",gender:"Female",dob:"1989-02-28",address:"16 Ganesh Wadi, Sinnar MH 422103",emptype:"Self-Employed",income:32000,employer:"Bhosale Dairy",pan:"RSTUV8901W",aadhaar:"901235678901",cibil:660,emi:2000,loantype:"Micro Finance",amount:60000,tenure:"6 Months",purpose:"Cattle Purchase",status:"Approved",date:"2025-02-09"},
+  {id:"VL-2025-0019",name:"Ganesh Patil",mobile:"8990123456",email:"ganesh.patil@gmail.com",gender:"Male",dob:"1977-10-14",address:"Farm House, Igatpuri MH 422403",emptype:"Self-Employed",income:70000,employer:"Patil Agro Farm",pan:"STUVW9012X",aadhaar:"012346789012",cibil:755,emi:8000,loantype:"Gold Loan",amount:250000,tenure:"12 Months",purpose:"Irrigation Setup",status:"Processing",date:"2025-02-11"},
+  {id:"VL-2025-0020",name:"Rekha Agarwal",mobile:"8901234567",email:"rekha.agarwal@yahoo.com",gender:"Female",dob:"1984-06-01",address:"5 Laxmi Nagar, Jalgaon MH 425001",emptype:"Business Owner",income:85000,employer:"Agarwal Jewels",pan:"TUVWX0123Y",aadhaar:"123457890123",cibil:790,emi:12000,loantype:"Business Loan",amount:1500000,tenure:"60 Months",purpose:"Inventory Purchase",status:"Approved",date:"2025-02-13"},
+  {id:"VL-2025-0021",name:"Sanjay Wagh",mobile:"8812345678",email:"sanjay.wagh@gmail.com",gender:"Male",dob:"1981-12-19",address:"40 CIDCO, Nanded MH 431605",emptype:"Salaried",income:52000,employer:"ONGC",pan:"UVWXY1234Z",aadhaar:"234568901234",cibil:760,emi:6000,loantype:"Home Loan",amount:3200000,tenure:"240 Months",purpose:"Plot Purchase",status:"Approved",date:"2025-02-15"},
+  {id:"VL-2025-0022",name:"Lata Shinde",mobile:"8723456789",email:"lata.shinde@gmail.com",gender:"Female",dob:"1996-03-07",address:"Near Temple, Satara MH 415002",emptype:"Salaried",income:26000,employer:"Big Bazaar",pan:"VWXYZ2345A",aadhaar:"345679012456",cibil:640,emi:0,loantype:"Personal Loan",amount:75000,tenure:"12 Months",purpose:"Electronics",status:"Pending",date:"2025-02-17"},
+  {id:"VL-2025-0023",name:"Nitin Chavan",mobile:"8634561234",email:"nitin.chavan@outlook.com",gender:"Male",dob:"1979-05-23",address:"Bajarpeth, Pandharpur MH 413304",emptype:"Business Owner",income:110000,employer:"Chavan Transport",pan:"WXYZA3456B",aadhaar:"456780123567",cibil:775,emi:20000,loantype:"Vehicle Loan",amount:1200000,tenure:"60 Months",purpose:"Truck Purchase",status:"Approved",date:"2025-02-19"},
+  {id:"VL-2025-0024",name:"Deepa Rao",mobile:"8545671234",email:"deepa.rao@gmail.com",gender:"Female",dob:"1991-09-11",address:"12 IT Park Hinjewadi, Pune MH 411057",emptype:"Salaried",income:95000,employer:"Cognizant",pan:"XYZAB4567C",aadhaar:"567891234678",cibil:810,emi:14000,loantype:"Home Loan",amount:6000000,tenure:"240 Months",purpose:"Flat Purchase",status:"Approved",date:"2025-02-21"},
+  {id:"VL-2025-0025",name:"Mahesh Naik",mobile:"8456781234",email:"mahesh.naik@gmail.com",gender:"Male",dob:"1974-01-30",address:"Fishing Village, Malvan MH 416606",emptype:"Self-Employed",income:28000,employer:"Fish Seller",pan:"YZABC5678D",aadhaar:"678902345789",cibil:610,emi:0,loantype:"Micro Finance",amount:40000,tenure:"6 Months",purpose:"Boat Repair",status:"Rejected",date:"2025-02-23"},
+  {id:"VL-2025-0026",name:"Anita Deshmukh",mobile:"8367890123",email:"anita.deshmukh@yahoo.com",gender:"Female",dob:"1988-07-17",address:"27 Veer Savarkar Marg, Nashik MH 422002",emptype:"Salaried",income:57000,employer:"Maharashtra Govt",pan:"ZABCD6789E",aadhaar:"789013456890",cibil:745,emi:9000,loantype:"Education Loan",amount:400000,tenure:"60 Months",purpose:"Child Education",status:"Approved",date:"2025-02-25"},
+  {id:"VL-2025-0027",name:"Ramesh Sawant",mobile:"8278901234",email:"ramesh.sawant@gmail.com",gender:"Male",dob:"1986-11-04",address:"Sawant Wadi, Sindhudurg MH 416519",emptype:"Self-Employed",income:45000,employer:"Sawant Resort",pan:"ABCDE7890F",aadhaar:"890124567901",cibil:700,emi:7000,loantype:"Business Loan",amount:600000,tenure:"36 Months",purpose:"Hotel Renovation",status:"Processing",date:"2025-02-27"},
+  {id:"VL-2025-0028",name:"Vandana Pandey",mobile:"8189012345",email:"vandana.pandey@gmail.com",gender:"Female",dob:"1993-04-26",address:"Flat 3B, Navi Mumbai MH 400709",emptype:"Salaried",income:68000,employer:"Deloitte India",pan:"BCDEF8901G",aadhaar:"901235678012",cibil:780,emi:10000,loantype:"Personal Loan",amount:400000,tenure:"36 Months",purpose:"Investment",status:"Approved",date:"2025-03-01"},
+  {id:"VL-2025-0029",name:"Ajay Kumar Mishra",mobile:"7890123456",email:"ajay.mishra@outlook.com",gender:"Male",dob:"1976-08-13",address:"Civil Lines, Osmanabad MH 413501",emptype:"Salaried",income:43000,employer:"Railway Dept",pan:"CDEFG9012H",aadhaar:"012346789123",cibil:715,emi:5000,loantype:"Vehicle Loan",amount:350000,tenure:"36 Months",purpose:"Car Upgrade",status:"Pending",date:"2025-03-03"},
+  {id:"VL-2025-0030",name:"Asha Bhatt",mobile:"7801234567",email:"asha.bhatt@gmail.com",gender:"Female",dob:"1985-12-21",address:"9 Peth Road, Nashik MH 422001",emptype:"Business Owner",income:92000,employer:"Bhatt Pharma",pan:"DEFGH0123I",aadhaar:"123457890234",cibil:800,emi:16000,loantype:"Business Loan",amount:2500000,tenure:"60 Months",purpose:"Pharma Expansion",status:"Approved",date:"2025-03-05"},
+  {id:"VL-2025-0031",name:"Santosh Gaikwad",mobile:"7712345678",email:"santosh.gaikwad@gmail.com",gender:"Male",dob:"1989-02-09",address:"Gaikwad Colony, Shirdi MH 423109",emptype:"Self-Employed",income:38000,employer:"Gaikwad Taxi",pan:"EFGHI1234J",aadhaar:"234568901345",cibil:690,emi:4000,loantype:"Vehicle Loan",amount:280000,tenure:"24 Months",purpose:"Auto Rickshaw",status:"Approved",date:"2025-03-07"},
+  {id:"VL-2025-0032",name:"Pallavi Jain",mobile:"7623456789",email:"pallavi.jain@yahoo.com",gender:"Female",dob:"1998-06-30",address:"Jain Nagar, Malegaon MH 423203",emptype:"Salaried",income:32000,employer:"Teaching Job",pan:"FGHIJ2345K",aadhaar:"345679012567",cibil:665,emi:0,loantype:"Education Loan",amount:200000,tenure:"24 Months",purpose:"B.Ed Course",status:"Approved",date:"2025-03-09"},
+  {id:"VL-2025-0033",name:"Vikas Thakur",mobile:"7534561234",email:"vikas.thakur@gmail.com",gender:"Male",dob:"1983-10-05",address:"Near Collectorate, Raigad MH 402201",emptype:"Salaried",income:60000,employer:"PWD Dept",pan:"GHIJK3456L",aadhaar:"456780123678",cibil:750,emi:8000,loantype:"Home Loan",amount:2200000,tenure:"180 Months",purpose:"Home Repair",status:"Processing",date:"2025-03-11"},
+  {id:"VL-2025-0034",name:"Sunanda More",mobile:"7445671234",email:"sunanda.more@gmail.com",gender:"Female",dob:"1990-03-18",address:"55 Pandurang Nagar, Solapur MH 413003",emptype:"Self-Employed",income:35000,employer:"Catering Business",pan:"HIJKL4567M",aadhaar:"567891234789",cibil:675,emi:3000,loantype:"Micro Finance",amount:90000,tenure:"12 Months",purpose:"Equipment",status:"Approved",date:"2025-03-13"},
+  {id:"VL-2025-0035",name:"Pramod Kulkarni",mobile:"7356781234",email:"pramod.kulkarni@outlook.com",gender:"Male",dob:"1971-07-24",address:"Flat 7, Pimpri Pune MH 411018",emptype:"Retired",income:25000,employer:"Pensioner",pan:"IJKLM5678N",aadhaar:"678902345890",cibil:720,emi:0,loantype:"Gold Loan",amount:180000,tenure:"12 Months",purpose:"Medical",status:"Approved",date:"2025-03-15"},
+  {id:"VL-2025-0036",name:"Geeta Nikam",mobile:"7267890123",email:"geeta.nikam@gmail.com",gender:"Female",dob:"1994-11-12",address:"Near Bus Stand, Karad MH 415110",emptype:"Salaried",income:36000,employer:"Private School",pan:"JKLMN6789O",aadhaar:"789013456901",cibil:685,emi:2500,loantype:"Personal Loan",amount:120000,tenure:"18 Months",purpose:"Laptop",status:"Pending",date:"2025-03-17"},
+  {id:"VL-2025-0037",name:"Dilip Raut",mobile:"7178901234",email:"dilip.raut@gmail.com",gender:"Male",dob:"1978-04-06",address:"Raut Wada, Latur MH 413512",emptype:"Business Owner",income:78000,employer:"Raut Hardware",pan:"KLMNO7890P",aadhaar:"890124567912",cibil:760,emi:11000,loantype:"Business Loan",amount:1000000,tenure:"48 Months",purpose:"Inventory",status:"Approved",date:"2025-03-19"},
+  {id:"VL-2025-0038",name:"Archana Bankar",mobile:"7089012345",email:"archana.bankar@yahoo.com",gender:"Female",dob:"1987-08-20",address:"17 New Colony, Ahmednagar MH 414001",emptype:"Salaried",income:44000,employer:"NABARD",pan:"LMNOP8901Q",aadhaar:"901235678123",cibil:730,emi:6000,loantype:"Home Loan",amount:1800000,tenure:"120 Months",purpose:"Flat Down Payment",status:"Approved",date:"2025-03-21"},
+  {id:"VL-2025-0039",name:"Kiran Jadhav",mobile:"6890123456",email:"kiran.jadhav@gmail.com",gender:"Male",dob:"1996-01-28",address:"Student Hostel, Nashik MH 422005",emptype:"Student",income:0,employer:"YCMOU University",pan:"MNOPQ9012R",aadhaar:"012346789234",cibil:0,emi:0,loantype:"Education Loan",amount:250000,tenure:"60 Months",purpose:"Engineering Fees",status:"Pending",date:"2025-03-23"},
+  {id:"VL-2025-0040",name:"Madhuri Ghare",mobile:"6801234567",email:"madhuri.ghare@gmail.com",gender:"Female",dob:"1982-05-15",address:"88 Tilak Road, Nashik MH 422001",emptype:"Self-Employed",income:50000,employer:"Ghare Parlour",pan:"NOPQR0123S",aadhaar:"123457890345",cibil:695,emi:5000,loantype:"Personal Loan",amount:180000,tenure:"24 Months",purpose:"Salon Renovation",status:"Approved",date:"2025-03-25"},
+  {id:"VL-2025-0041",name:"Bhaskar Salve",mobile:"6712345678",email:"bhaskar.salve@outlook.com",gender:"Male",dob:"1973-09-08",address:"Salve Farm, Kopargaon MH 423601",emptype:"Self-Employed",income:62000,employer:"Salve Poultry",pan:"OPQRS1234T",aadhaar:"234568901456",cibil:720,emi:8000,loantype:"Business Loan",amount:700000,tenure:"36 Months",purpose:"Poultry Expansion",status:"Processing",date:"2025-03-27"},
+  {id:"VL-2025-0042",name:"Urmila Kamble",mobile:"6623456789",email:"urmila.kamble@gmail.com",gender:"Female",dob:"1992-12-03",address:"Kamble Wasti, Pune Rural MH 412207",emptype:"Salaried",income:29000,employer:"Anganwadi Dept",pan:"PQRST2345U",aadhaar:"345679012678",cibil:640,emi:0,loantype:"Micro Finance",amount:50000,tenure:"6 Months",purpose:"SHG Business",status:"Approved",date:"2025-03-29"},
+  {id:"VL-2025-0043",name:"Harish Londhe",mobile:"6534561234",email:"harish.londhe@gmail.com",gender:"Male",dob:"1980-03-17",address:"25 Panchvati, Nashik MH 422003",emptype:"Salaried",income:75000,employer:"ITC Limited",pan:"QRSTU3456V",aadhaar:"456780123789",cibil:780,emi:12000,loantype:"Vehicle Loan",amount:900000,tenure:"60 Months",purpose:"SUV Purchase",status:"Approved",date:"2025-04-01"},
+  {id:"VL-2025-0044",name:"Rajani Sutar",mobile:"6445671234",email:"rajani.sutar@yahoo.com",gender:"Female",dob:"1985-07-29",address:"3 Ambedkar Nagar, Ichalkaranji MH 416115",emptype:"Business Owner",income:66000,employer:"Sutar Textiles",pan:"RSTUV4567W",aadhaar:"567891234890",cibil:740,emi:9000,loantype:"Business Loan",amount:1200000,tenure:"48 Months",purpose:"Weaving Machine",status:"Approved",date:"2025-04-02"},
+  {id:"VL-2025-0045",name:"Nilesh Ghodke",mobile:"6356781234",email:"nilesh.ghodke@gmail.com",gender:"Male",dob:"1991-11-16",address:"Near River, Wai MH 412803",emptype:"Salaried",income:41000,employer:"Kirloskar Electric",pan:"STUVW5678X",aadhaar:"678902345901",cibil:700,emi:5000,loantype:"Home Loan",amount:2000000,tenure:"180 Months",purpose:"Construction",status:"Pending",date:"2025-04-03"},
+  {id:"VL-2025-0046",name:"Savita Borse",mobile:"6267890123",email:"savita.borse@gmail.com",gender:"Female",dob:"1988-02-22",address:"Borse House, Baramati MH 413102",emptype:"Self-Employed",income:42000,employer:"Borse Grocery",pan:"TUVWX6789Y",aadhaar:"789013457012",cibil:688,emi:4000,loantype:"Gold Loan",amount:200000,tenure:"12 Months",purpose:"Wedding",status:"Approved",date:"2025-04-04"},
+  {id:"VL-2025-0047",name:"Vijay Parab",mobile:"6178901234",email:"vijay.parab@outlook.com",gender:"Male",dob:"1976-06-10",address:"Fishing Docks, Ratnagiri MH 415612",emptype:"Self-Employed",income:33000,employer:"Fish Exporter",pan:"UVWXY7890Z",aadhaar:"890124568012",cibil:660,emi:0,loantype:"Micro Finance",amount:70000,tenure:"12 Months",purpose:"Cold Storage",status:"Rejected",date:"2025-04-05"},
+  {id:"VL-2025-0048",name:"Champa Wani",mobile:"6089012345",email:"champa.wani@gmail.com",gender:"Female",dob:"1972-10-31",address:"Wani Nagar, Yeola MH 423401",emptype:"Business Owner",income:80000,employer:"Wani Silk",pan:"VWXYZ8901A",aadhaar:"901235679012",cibil:760,emi:10000,loantype:"Business Loan",amount:900000,tenure:"36 Months",purpose:"Silk Handloom",status:"Approved",date:"2025-04-07"},
+  {id:"VL-2025-0049",name:"Tejas Gade",mobile:"9012345678",email:"tejas.gade@gmail.com",gender:"Male",dob:"1999-08-05",address:"College Campus, Nashik MH 422005",emptype:"Student",income:5000,employer:"Part-time",pan:"WXYZA9012B",aadhaar:"012346790123",cibil:0,emi:0,loantype:"Education Loan",amount:150000,tenure:"36 Months",purpose:"Course Fees",status:"Processing",date:"2025-04-08"},
+  {id:"VL-2025-0050",name:"Shilpa Mahajan",mobile:"9123456780",email:"shilpa.mahajan@yahoo.com",gender:"Female",dob:"1984-04-12",address:"9 Bhagwan Nagar, Mumbai MH 400066",emptype:"Salaried",income:110000,employer:"HSBC Bank",pan:"XYZAB0123C",aadhaar:"123457891234",cibil:830,emi:18000,loantype:"Home Loan",amount:7500000,tenure:"240 Months",purpose:"Sea-view Flat",status:"Approved",date:"2025-04-09"}
+];
+
+let curPage = 1, PER = 10, filtered = [...DB];
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function toast(icon,title,msg,type=''){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastTitle').textContent=title;
+  document.getElementById('toastMsg').textContent=msg;
+  t.className='toast '+type; void t.offsetWidth; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),4200);
+}
+function sc(s){return{Approved:'b-approved',Pending:'b-pending',Rejected:'b-rejected',Processing:'b-processing'}[s]||'';}
+function fmt(n){return Number(n).toLocaleString('en-IN');}
+
+/* ─────────────────────────────────────────────
+   AUTH
+───────────────────────────────────────────── */
+function switchTab(t){
+  ['login','register'].forEach(x=>{
+    document.getElementById('tab-'+x).classList.toggle('active',x===t);
+    document.getElementById('form-'+x).classList.toggle('active',x===t);
+  });
+  document.getElementById('loginErr').classList.remove('show');
+  document.getElementById('regErr').classList.remove('show');
+  document.getElementById('regOk').classList.remove('show');
+}
+function fillDemo(type){
+  document.getElementById('li_email').value=type==='admin'?'admin@verifyloan.in':'user@verifyloan.in';
+  document.getElementById('li_pwd').value=type==='admin'?'Admin@9999':'User@1234';
+  document.getElementById('loginErr').classList.remove('show');
+}
+function togglePw(id,btn){
+  const i=document.getElementById(id);
+  i.type=i.type==='password'?'text':'password';
+  btn.textContent=i.type==='text'?'🙈':'👁';
+}
+function checkPwStrength(pw){
+  const bars=[1,2,3,4].map(i=>document.getElementById('ps'+i));
+  const lbl=document.getElementById('psLbl');
+  let s=0;
+  if(pw.length>=8)s++;if(/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw))s++;if(/[^A-Za-z0-9]/.test(pw))s++;
+  const cols=['#e05252','#f59e0b','#60a5ff','#2ecc7a'],lbls=['Too weak','Fair','Good','Strong ✓'];
+  bars.forEach((b,i)=>b.style.background=i<s?cols[s-1]:'rgba(255,255,255,.1)');
+  lbl.textContent=pw.length===0?'Enter a password':lbls[s-1]||'Too weak';
+  lbl.style.color=pw.length===0?'var(--muted)':cols[s-1]||cols[0];
+}
+function forgotPwd(){toast('📧','Password Reset','A reset link has been sent to your registered email address.','success');}
+
+function doLogin(){
+  const email=document.getElementById('li_email').value.trim().toLowerCase();
+  const pwd=document.getElementById('li_pwd').value;
+  const errEl=document.getElementById('loginErr');
+  const btn=document.getElementById('loginBtn');
+  if(!email||!pwd){errEl.textContent='⚠️ Please enter both email and password.';errEl.classList.add('show');return;}
+  btn.textContent='Signing in…';btn.classList.add('loading');btn.disabled=true;
+  setTimeout(()=>{
+    const user=USERS.find(u=>u.email.toLowerCase()===email&&u.pwd===pwd);
+    btn.textContent='Sign In to Dashboard →';btn.classList.remove('loading');btn.disabled=false;
+    if(!user){errEl.textContent='❌ Invalid email or password. Please try again.';errEl.classList.add('show');return;}
+    errEl.classList.remove('show');
+    currentUser=user;
+    bootApp(user);
+  },900);
+}
+
+function doRegister(){
+  const name=document.getElementById('rg_name').value.trim();
+  const email=document.getElementById('rg_email').value.trim().toLowerCase();
+  const mobile=document.getElementById('rg_mobile').value.trim();
+  const pwd=document.getElementById('rg_pwd').value;
+  const pwd2=document.getElementById('rg_pwd2').value;
+  const terms=document.getElementById('termsChk').checked;
+  const e=document.getElementById('regErr');const ok=document.getElementById('regOk');
+  e.classList.remove('show');ok.classList.remove('show');
+  if(!name||!email||!mobile||!pwd||!pwd2){e.textContent='⚠️ All fields are required.';e.classList.add('show');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){e.textContent='⚠️ Enter a valid email address.';e.classList.add('show');return;}
+  if(mobile.length!==10||isNaN(mobile)){e.textContent='⚠️ Enter a valid 10-digit mobile number.';e.classList.add('show');return;}
+  if(pwd.length<8){e.textContent='⚠️ Password must be at least 8 characters.';e.classList.add('show');return;}
+  if(pwd!==pwd2){e.textContent='⚠️ Passwords do not match.';e.classList.add('show');return;}
+  if(!terms){e.textContent='⚠️ You must accept the Terms of Service.';e.classList.add('show');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===email)){e.textContent='⚠️ An account with this email already exists.';e.classList.add('show');return;}
+  const nu={name,email,pwd,role:'user',mobile};USERS.push(nu);
+  ok.textContent='✅ Account created! Signing you in…';ok.classList.add('show');
+  setTimeout(()=>{currentUser=nu;bootApp(nu);},1400);
+}
+
+function bootApp(user){
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.add('visible');
+  document.getElementById('mainNav').classList.add('visible');
+  const init=user.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('navAv').textContent=init;
+  document.getElementById('navName').textContent=user.name.split(' ')[0];
+  document.getElementById('navRole').textContent=user.role==='admin'?'🛡 Admin':'👤 Member';
+  // Dashboard always visible to everyone
+  document.getElementById('nav-dashboard').style.display='';
+  showPage('home');
+  animCounter(document.getElementById('ctr-apps'),DB.length);
+  toast('👋','Welcome, '+user.name.split(' ')[0]+'!',user.role==='admin'?'Signed in as Administrator':'Dashboard & all features are available','success');
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('mainApp').classList.remove('visible');
+  document.getElementById('mainNav').classList.remove('visible');
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('li_email').value='';
+  document.getElementById('li_pwd').value='';
+  document.getElementById('loginErr').classList.remove('show');
+  switchTab('login');
+  toast('🔒','Logged Out','You have been safely signed out.','');
+}
+
+/* ─────────────────────────────────────────────
+   NAVIGATION
+───────────────────────────────────────────── */
+function showPage(p){
+  if(!currentUser)return;
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-links button[id^="nav-"]').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  const nb=document.getElementById('nav-'+p);if(nb)nb.classList.add('active');
+  if(p==='dashboard'){updateKPIs();renderTable();renderCharts();}
+  window.scrollTo(0,0);
+}
+
+/* ─────────────────────────────────────────────
+   COUNTER ANIMATION
+───────────────────────────────────────────── */
+function animCounter(el,target){
+  let c=0;const step=Math.ceil(target/60);
+  const t=setInterval(()=>{c=Math.min(c+step,target);el.textContent=c;if(c>=target)clearInterval(t);},20);
+}
+
+/* ─────────────────────────────────────────────
+   KPIs
+───────────────────────────────────────────── */
+function updateKPIs(){
+  const tot=DB.length;
+  const app=DB.filter(r=>r.status==='Approved').length;
+  const pen=DB.filter(r=>r.status==='Pending').length;
+  const proc=DB.filter(r=>r.status==='Processing').length;
+  const rej=DB.filter(r=>r.status==='Rejected').length;
+  const amt=DB.reduce((s,r)=>s+r.amount,0);
+  document.getElementById('kpi-total').textContent=tot;
+  document.getElementById('kpi-approved').textContent=app;
+  document.getElementById('kpi-pending').textContent=pen;
+  document.getElementById('kpi-processing').textContent=proc;
+  document.getElementById('kpi-rejected').textContent=rej;
+  document.getElementById('kpi-amount').textContent='₹'+(amt/10000000).toFixed(2)+'Cr';
+  document.getElementById('kpi-apprate').textContent='↑ '+Math.round(app/tot*100)+'% rate';
+  // Show role banner
+  if(currentUser){
+    document.getElementById('adminBanner').style.display=currentUser.role==='admin'?'flex':'none';
+    document.getElementById('userBanner').style.display=currentUser.role==='user'?'flex':'none';
+    if(currentUser.role==='user') document.getElementById('userBannerName').textContent=currentUser.name+' — Member View';
+  }
+  // Mini chart bars (last 5 weeks simulated)
+  const mc=document.getElementById('mc-total');
+  if(mc){mc.innerHTML='';[30,45,38,52,tot].forEach(v=>{const b=document.createElement('div');b.className='mc-bar';b.style.cssText=`height:${Math.round(v/tot*32)}px;background:rgba(200,146,42,.5);`;mc.appendChild(b);});}
+}
+
+/* ─────────────────────────────────────────────
+   CHARTS
+───────────────────────────────────────────── */
+function renderCharts(){
+  // Bar chart – loan types
+  const types={};DB.forEach(r=>types[r.loantype]=(types[r.loantype]||0)+1);
+  const sorted=Object.entries(types).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const max=sorted[0]?sorted[0][1]:1;
+  const bc=document.getElementById('loanTypeChart');
+  if(bc){
+    bc.innerHTML='';
+    const colors=['#e8b84b','#2ecc7a','#60a5ff','#c8922a','#00c9a7','#f87171'];
+    sorted.forEach(([k,v],i)=>{
+      bc.innerHTML+=`<div class="bar-row">
+        <span class="bar-lbl" title="${k}">${k.replace(' Loan','').replace('Micro Finance','Micro')}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%;background:${colors[i]};"></div></div>
+        <span class="bar-val">${v}</span>
+      </div>`;
+    });
+  }
+
+  // Donut – status
+  const statCols={Approved:'#2ecc7a',Pending:'#e8b84b',Processing:'#60a5ff',Rejected:'#e05252'};
+  const statData={Approved:0,Pending:0,Processing:0,Rejected:0};
+  DB.forEach(r=>{if(statData[r.status]!==undefined)statData[r.status]++;});
+  const svg=document.getElementById('donutSvg');
+  const legend=document.getElementById('donutLegend');
+  if(svg&&legend){
+    const entries=Object.entries(statData);const total2=entries.reduce((s,[,v])=>s+v,0);
+    let offset=0;const r2=38,cx=50,cy=50,circ=2*Math.PI*r2;
+    let paths='<circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="14"/>';
+    entries.forEach(([k,v])=>{
+      const pct=v/total2,dash=pct*circ,gap=circ-dash;
+      const rot=offset*360-90;
+      paths+=`<circle cx="${cx}" cy="${cy}" r="${r2}" fill="none" stroke="${statCols[k]}" stroke-width="14" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="0" transform="rotate(${rot} ${cx} ${cy})"/>`;
+      offset+=pct;
+    });
+    svg.innerHTML=paths;
+    legend.innerHTML=entries.map(([k,v])=>`<div class="dl-item"><div class="dl-dot" style="background:${statCols[k]};"></div><span>${k}: <strong>${v}</strong></span></div>`).join('');
+  }
+
+  // Recent activity
+  const al=document.getElementById('activityList');
+  if(al){
+    const recent=DB.slice(0,5);
+    al.innerHTML=recent.map(r=>{
+      const ic={Approved:'✅',Pending:'⏳',Rejected:'❌',Processing:'🔄'}[r.status]||'📋';
+      const bg={Approved:'rgba(46,204,122,.1)',Pending:'rgba(200,146,42,.1)',Rejected:'rgba(224,82,82,.1)',Processing:'rgba(37,99,235,.1)'}[r.status]||'rgba(255,255,255,.05)';
+      return `<div class="act-item">
+        <div class="act-ic" style="background:${bg};">${ic}</div>
+        <div class="act-text"><strong>${r.name.split(' ')[0]} ${r.name.split(' ').slice(-1)[0]}</strong><span>${r.loantype} — ₹${fmt(r.amount)}</span></div>
+        <span class="act-time">${r.date}</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+/* ─────────────────────────────────────────────
+   TABLE
+───────────────────────────────────────────── */
+function renderTable(){
+  const srch=document.getElementById('srchInput').value.toLowerCase();
+  const stF=document.getElementById('stFilter').value;
+  const tyF=document.getElementById('tyFilter').value;
+  filtered=DB.filter(r=>{
+    const m=!srch||r.name.toLowerCase().includes(srch)||r.id.toLowerCase().includes(srch)||r.mobile.includes(srch)||r.email.toLowerCase().includes(srch);
+    return m&&(!stF||r.status===stF)&&(!tyF||r.loantype===tyF);
+  });
+  const pages=Math.ceil(filtered.length/PER);if(curPage>pages)curPage=1;
+  const start=(curPage-1)*PER,slice=filtered.slice(start,start+PER);
+  const tbody=document.getElementById('tableBody');tbody.innerHTML='';
+  if(!slice.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--muted);">No records found</td></tr>';return;}
+  // Admin sees full action buttons; user sees view-only
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  slice.forEach((r,i)=>{
+    const row=document.createElement('tr');
+    row.innerHTML=`
+      <td style="color:var(--muted);font-size:.78rem;">${start+i+1}</td>
+      <td><span class="td-id">${r.id}</span></td>
+      <td><span class="td-name">${r.name}</span></td>
+      <td style="color:var(--muted);">${r.mobile}</td>
+      <td>${r.loantype}</td>
+      <td><span class="td-amt">₹${fmt(r.amount)}</span></td>
+      <td style="font-family:'DM Mono',monospace;font-size:.82rem;">${r.cibil||'—'}</td>
+      <td style="color:var(--muted);">${r.tenure}</td>
+      <td style="color:var(--muted);font-size:.82rem;">${r.date}</td>
+      <td><span class="badge ${sc(r.status)}">${r.status}</span></td>
+      <td>
+        <button class="act-btn" onclick='viewDetails("${r.id}")'>👁 View</button>
+        ${isAdmin?`<button class="act-btn app-btn" onclick='updStatus("${r.id}","Approved")' title="Approve">✓</button>
+        <button class="act-btn rej-btn" onclick='updStatus("${r.id}","Rejected")' title="Reject">✗</button>`:''}
+      </td>`;
+    tbody.appendChild(row);
+  });
+  document.getElementById('pgInfo').textContent=`Showing ${Math.min(start+1,filtered.length)}–${Math.min(start+PER,filtered.length)} of ${filtered.length} records`;
+  // Pagination
+  const pb=document.getElementById('pgBtns');pb.innerHTML='';
+  const prev=document.createElement('button');prev.className='pg-btn';prev.textContent='‹';
+  prev.onclick=()=>{if(curPage>1){curPage--;renderTable();}};pb.appendChild(prev);
+  for(let i=1;i<=pages;i++){
+    if(pages>7&&i>3&&i<pages-2&&Math.abs(i-curPage)>1){
+      if(pb.lastChild.textContent!=='…'){const d=document.createElement('button');d.className='pg-btn';d.textContent='…';d.disabled=true;pb.appendChild(d);}continue;
+    }
+    const btn=document.createElement('button');
+    btn.className='pg-btn'+(i===curPage?' active':'');btn.textContent=i;
+    btn.onclick=((p)=>()=>{curPage=p;renderTable();})(i);pb.appendChild(btn);
+  }
+  const next=document.createElement('button');next.className='pg-btn';next.textContent='›';
+  next.onclick=()=>{if(curPage<pages){curPage++;renderTable();}};pb.appendChild(next);
+}
+
+/* ─────────────────────────────────────────────
+   MODAL
+───────────────────────────────────────────── */
+function viewDetails(id){
+  const r=DB.find(x=>x.id===id);if(!r)return;
+  document.getElementById('modalTitle').textContent='Application — '+r.id;
+  const isAdmin=currentUser&&currentUser.role==='admin';
+  document.getElementById('modalBody').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <span class="badge ${sc(r.status)}" style="font-size:.88rem;">${r.status}</span>
+      ${isAdmin?`<div style="display:flex;gap:8px;">
+        <button class="act-btn app-btn" onclick='updStatus("${r.id}","Approved");closeModal();' style="font-size:.82rem;">✓ Approve</button>
+        <button class="act-btn rej-btn" onclick='updStatus("${r.id}","Rejected");closeModal();' style="font-size:.82rem;">✗ Reject</button>
+      </div>`:''}
+    </div>
+    ${mr('Application ID',r.id)}${mr('Applicant Name',r.name)}${mr('Mobile',r.mobile)}
+    ${mr('Email',r.email)}${mr('Date of Birth',r.dob)}${mr('Gender',r.gender)}
+    ${mr('Address',r.address)}<div style="height:6px;"></div>
+    ${mr('Employment',r.emptype)}${mr('Employer',r.employer)}
+    ${mr('Monthly Income','₹'+fmt(r.income))}${mr('Existing EMIs','₹'+fmt(r.emi))}
+    ${mr('PAN',r.pan)}${mr('Aadhaar',r.aadhaar.replace(/(\d{4})/g,'$1 ').trim())}
+    ${mr('CIBIL Score',r.cibil||'—')}<div style="height:6px;"></div>
+    ${mr('Loan Type',r.loantype)}${mr('Loan Amount','₹'+fmt(r.amount))}
+    ${mr('Tenure',r.tenure)}${mr('Purpose',r.purpose)}${mr('Applied On',r.date)}`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function mr(l,v){return `<div class="m-row"><span class="ml">${l}</span><span class="mv">${v}</span></div>`;}
+function closeModal(e){if(!e||e.target===document.getElementById('modalOverlay'))document.getElementById('modalOverlay').classList.remove('open');}
+
+/* ─────────────────────────────────────────────
+   UPDATE STATUS (admin only)
+───────────────────────────────────────────── */
+function updStatus(id,ns){
+  if(!currentUser||currentUser.role!=='admin'){toast('🔒','Admin Only','Only admins can approve or reject applications.','error');return;}
+  const r=DB.find(x=>x.id===id);if(!r)return;
+  const prev=r.status;r.status=ns;
+  renderTable();updateKPIs();renderCharts();
+  toast(ns==='Approved'?'✅':'❌','Status Updated',`${r.name}: ${prev} → ${ns}`,ns==='Approved'?'success':'error');
+}
+
+/* ─────────────────────────────────────────────
+   SUBMIT APPLICATION
+───────────────────────────────────────────── */
+function submitApp(){
+  if(!currentUser)return;
+  const fields={f_fname:'First Name',f_lname:'Last Name',f_mobile:'Mobile',f_email:'Email',f_loantype:'Loan Type',f_amount:'Amount',f_emptype:'Employment',f_income:'Income',f_pan:'PAN',f_aadhaar:'Aadhaar',f_tenure:'Tenure'};
+  for(const[id,label] of Object.entries(fields)){
+    if(!document.getElementById(id).value.trim()){toast('⚠️','Missing Field',label+' is required.','error');return;}
+  }
+  const mobile=document.getElementById('f_mobile').value.trim();
+  const pan=document.getElementById('f_pan').value.trim().toUpperCase();
+  const aadhaar=document.getElementById('f_aadhaar').value.trim();
+  if(mobile.length!==10||isNaN(mobile)){toast('⚠️','Invalid Mobile','Enter a valid 10-digit mobile number.','error');return;}
+  if(!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(pan)){toast('⚠️','Invalid PAN','PAN format should be ABCDE1234F.','error');return;}
+  if(aadhaar.length!==12||isNaN(aadhaar)){toast('⚠️','Invalid Aadhaar','Aadhaar must be exactly 12 digits.','error');return;}
+  const newId='VL-2025-'+String(DB.length+1).padStart(4,'0');
+  DB.unshift({
+    id:newId,
+    name:document.getElementById('f_fname').value.trim()+' '+document.getElementById('f_lname').value.trim(),
+    mobile,email:document.getElementById('f_email').value.trim(),
+    gender:document.getElementById('f_gender').value||'N/A',
+    dob:document.getElementById('f_dob').value||'N/A',
+    address:document.getElementById('f_address').value||'N/A',
+    emptype:document.getElementById('f_emptype').value,
+    income:Number(document.getElementById('f_income').value),
+    employer:document.getElementById('f_employer').value||'N/A',
+    pan,aadhaar,
+    cibil:Number(document.getElementById('f_cibil').value)||0,
+    emi:Number(document.getElementById('f_emi').value)||0,
+    loantype:document.getElementById('f_loantype').value,
+    amount:Number(document.getElementById('f_amount').value),
+    tenure:document.getElementById('f_tenure').value,
+    purpose:document.getElementById('f_purpose').value||'N/A',
+    status:'Pending',date:new Date().toISOString().split('T')[0]
+  });
+  ['f_fname','f_lname','f_mobile','f_email','f_address','f_employer','f_pan','f_aadhaar','f_income','f_emi','f_amount','f_cibil','f_purpose','f_remarks'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['f_gender','f_emptype','f_loantype','f_tenure','f_dob'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  toast('🎉','Application Submitted!','Your ID: '+newId+' | Status: Pending Review','success');
+  setTimeout(()=>showPage('dashboard'),2200);
+}
+
+/* ─────────────────────────────────────────────
+   VERIFY STATUS
+───────────────────────────────────────────── */
+function checkStatus(){
+  const q=document.getElementById('verifyInput').value.trim();
+  const res=document.getElementById('verifyResult');
+  if(!q){toast('⚠️','Empty Field','Enter Application ID or Mobile Number','error');return;}
+  const r=DB.find(x=>x.id.toLowerCase()===q.toLowerCase()||x.mobile===q);
+  if(!r){
+    res.className='verify-result show nf';
+    res.innerHTML=`<div style="color:var(--danger);font-weight:600;margin-bottom:8px;">❌ Record Not Found</div>
+      <p style="color:var(--muted);font-size:.87rem;">No application found for "<strong>${q}</strong>". Please check and try again.</p>`;
+    return;
+  }
+  const scolor={Approved:'var(--success)',Pending:'var(--gold2)',Rejected:'var(--danger)',Processing:'#60a5ff'}[r.status]||'var(--white)';
+  res.className='verify-result show found';
+  res.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <strong>✅ Application Found</strong>
+      <span class="badge ${sc(r.status)}">${r.status}</span>
+    </div>
+    ${vr('Application ID',r.id)}${vr('Applicant Name',r.name)}${vr('Loan Type',r.loantype)}
+    ${vr('Amount','₹'+fmt(r.amount))}${vr('Tenure',r.tenure)}${vr('Applied On',r.date)}
+    ${vr('Status',`<span style="color:${scolor};font-weight:700;">${r.status}</span>`)}`;
+}
+function vr(l,v){return `<div class="vr-row"><span class="vl">${l}</span><span class="vv">${v}</span></div>`;}
+
+/* ─────────────────────────────────────────────
+   EXPORT CSV
+───────────────────────────────────────────── */
+function exportCSV(){
+  const hdrs=['App ID','Name','Mobile','Email','Loan Type','Amount (₹)','CIBIL','Tenure','Status','Date'];
+  const rows=DB.map(r=>[r.id,`"${r.name}"`,r.mobile,r.email,r.loantype,r.amount,r.cibil,r.tenure,r.status,r.date]);
+  const csv=[hdrs.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='VerifyLoan_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+  toast('📥','Export Complete',DB.length+' records exported to CSV file','success');
+}
+</script>
+</body>
+</html>
